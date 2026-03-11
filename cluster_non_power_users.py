@@ -10,7 +10,7 @@ Setup:
 
 Local testing:
     cd streamlit_dashboard
-    streamlit run app_simple_sheets.py
+    streamlit run app_final.py
 """
 
 import streamlit as st
@@ -38,11 +38,19 @@ csv.field_size_limit(sys.maxsize)
 # ============================================================================
 
 # Required files
-CLUSTER_LABELS_URL = "https://drive.google.com/drive/u/0/folders/1WlcijByZ26ca1pGsZeBM6T3aw7Q3olfl"
+# CLUSTER_LABELS_URL: YOU STILL NEED TO ADD THE JSON FILE LINK
+# Go to: https://drive.google.com/drive/u/0/folders/1WlcijByZ26ca1pGsZeBM6T3aw7Q3olfl
+# Find cluster_labels.json → Right-click → Share → Copy link
+# Should look like: https://drive.google.com/file/d/FILE_ID_HERE/view?usp=sharing
+CLUSTER_LABELS_URL = "REPLACE_WITH_YOUR_JSON_FILE_LINK"
+
+# CLUSTER_ASSIGNMENTS_URL: Google Sheets CSV (✅ Already configured!)
 CLUSTER_ASSIGNMENTS_URL = "https://docs.google.com/spreadsheets/d/1zrLC8DAJ2cVsBCTcTDmpiMPJ4dbKRyf9bq4iBC927xk/edit?gid=1891549065#gid=1891549065"
 
-# Optional files (set to None if not using)
-RAW_DATA_URL = ""
+# Optional files
+RAW_DATA_URL = None  # Not using raw data
+
+# CLASSIFIED_DATA_URL: Google Sheets CSV (✅ Already configured!)
 CLASSIFIED_DATA_URL = "https://docs.google.com/spreadsheets/d/1rKADosJYtZS7ZW0jcb_UqCPStaaGSu1uK9mrB5uVE34/edit?gid=2020214483#gid=2020214483"
 
 # ============================================================================
@@ -377,14 +385,16 @@ def main():
 
         if data_source == "Google Drive/Sheets (Configured)":
             # Check if URLs are configured
-            if "YOUR_FILE_ID_HERE" in CLUSTER_LABELS_URL or "YOUR_SHEET_ID_HERE" in CLUSTER_ASSIGNMENTS_URL:
+            if "REPLACE_WITH" in CLUSTER_LABELS_URL or "YOUR_SHEET_ID_HERE" in CLUSTER_ASSIGNMENTS_URL:
                 st.error("❌ URLs not configured yet!")
                 st.info("""
                 **To configure:**
                 1. Upload files to Google Drive/Sheets
                 2. Share them with your org
-                3. Edit `app_simple_sheets.py`
-                4. Replace the placeholder URLs at the top
+                3. Edit `app_final.py` (or app.py)
+                4. Replace CLUSTER_LABELS_URL with your JSON file link
+
+                See GET_JSON_FILE_LINK.md for instructions!
                 """)
                 return
 
@@ -399,7 +409,7 @@ def main():
                     assignments = load_from_url(assignments_direct, 'csv')
 
                     # Load optional files
-                    if RAW_DATA_URL and "YOUR_SHEET_ID_HERE" not in RAW_DATA_URL:
+                    if RAW_DATA_URL and "YOUR_SHEET_ID_HERE" not in str(RAW_DATA_URL):
                         try:
                             raw_direct = convert_google_sheet_url(RAW_DATA_URL) if 'spreadsheets' in RAW_DATA_URL else convert_google_drive_url(RAW_DATA_URL)
                             raw_df = load_from_url(raw_direct, 'csv')
@@ -409,7 +419,7 @@ def main():
                         except Exception as e:
                             st.sidebar.warning(f"Could not load raw data: {e}")
 
-                    if CLASSIFIED_DATA_URL and "YOUR_SHEET_ID_HERE" not in CLASSIFIED_DATA_URL:
+                    if CLASSIFIED_DATA_URL and "YOUR_SHEET_ID_HERE" not in str(CLASSIFIED_DATA_URL):
                         try:
                             class_direct = convert_google_sheet_url(CLASSIFIED_DATA_URL) if 'spreadsheets' in CLASSIFIED_DATA_URL else convert_google_drive_url(CLASSIFIED_DATA_URL)
                             class_df = load_from_url(class_direct, 'csv')
@@ -432,6 +442,7 @@ def main():
                 - Make sure files are shared (publicly or with your org)
                 - Check that URLs are correct
                 - Ensure you're logged into your org Google account
+                - For JSON file: Use individual file link, not folder link!
                 """)
                 return
 
