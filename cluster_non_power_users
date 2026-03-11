@@ -42,7 +42,7 @@ CLUSTER_LABELS_URL = "https://drive.google.com/drive/u/0/folders/1WlcijByZ26ca1p
 CLUSTER_ASSIGNMENTS_URL = "https://drive.google.com/drive/u/0/folders/1WlcijByZ26ca1pGsZeBM6T3aw7Q3olfl"
 
 # Optional files (set to None if not using)
-RAW_DATA_URL = "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID_HERE/edit#gid=0"
+RAW_DATA_URL = ""
 CLASSIFIED_DATA_URL = "https://drive.google.com/drive/u/0/folders/1s6X8WBgA3xln1K0INOgxt8W0pIyvpo-A"
 
 # ============================================================================
