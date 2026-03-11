@@ -42,7 +42,7 @@ csv.field_size_limit(sys.maxsize)
 # Go to: https://drive.google.com/drive/u/0/folders/1WlcijByZ26ca1pGsZeBM6T3aw7Q3olfl
 # Find cluster_labels.json → Right-click → Share → Copy link
 # Should look like: https://drive.google.com/file/d/FILE_ID_HERE/view?usp=sharing
-CLUSTER_LABELS_URL = "https://drive.google.com/drive/u/0/folders/1WlcijByZ26ca1pGsZeBM6T3aw7Q3olfl"
+CLUSTER_LABELS_URL = "https://drive.google.com/file/d/1D3uC5kOmHLgWn7X1zFRlfPCYK5_BbQG9/view?usp=sharing"
 
 # CLUSTER_ASSIGNMENTS_URL: Google Sheets CSV (✅ Already configured!)
 CLUSTER_ASSIGNMENTS_URL = "https://docs.google.com/spreadsheets/d/1zrLC8DAJ2cVsBCTcTDmpiMPJ4dbKRyf9bq4iBC927xk/edit?gid=1891549065#gid=1891549065"
