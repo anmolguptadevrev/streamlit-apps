@@ -10,7 +10,7 @@ Setup:
 
 Local testing:
     cd streamlit_dashboard
-    streamlit run app_final.py
+    streamlit run app_simple_sheets.py
 """
 
 import streamlit as st
@@ -38,19 +38,11 @@ csv.field_size_limit(sys.maxsize)
 # ============================================================================
 
 # Required files
-# CLUSTER_LABELS_URL: YOU STILL NEED TO ADD THE JSON FILE LINK
-# Go to: https://drive.google.com/drive/u/0/folders/1WlcijByZ26ca1pGsZeBM6T3aw7Q3olfl
-# Find cluster_labels.json → Right-click → Share → Copy link
-# Should look like: https://drive.google.com/file/d/FILE_ID_HERE/view?usp=sharing
 CLUSTER_LABELS_URL = "https://drive.google.com/file/d/1D3uC5kOmHLgWn7X1zFRlfPCYK5_BbQG9/view?usp=sharing"
-
-# CLUSTER_ASSIGNMENTS_URL: Google Sheets CSV (✅ Already configured!)
 CLUSTER_ASSIGNMENTS_URL = "https://docs.google.com/spreadsheets/d/1zrLC8DAJ2cVsBCTcTDmpiMPJ4dbKRyf9bq4iBC927xk/edit?gid=1891549065#gid=1891549065"
 
-# Optional files
-RAW_DATA_URL = None  # Not using raw data
-
-# CLASSIFIED_DATA_URL: Google Sheets CSV (✅ Already configured!)
+# Optional files (set to None if not using)
+RAW_DATA_URL = None
 CLASSIFIED_DATA_URL = "https://docs.google.com/spreadsheets/d/1rKADosJYtZS7ZW0jcb_UqCPStaaGSu1uK9mrB5uVE34/edit?gid=2020214483#gid=2020214483"
 
 # ============================================================================
@@ -117,13 +109,33 @@ def convert_google_sheet_url(url):
 def load_from_url(url, file_type='csv'):
     """Load data from a URL."""
     try:
-        response = requests.get(url, timeout=30)
+        # Try with confirm parameter for large files
+        if 'drive.google.com/uc' in url and 'confirm=' not in url:
+            url = url + '&confirm=t'
+
+        response = requests.get(url, timeout=30, allow_redirects=True)
         response.raise_for_status()
+
+        # Check if we got HTML instead of data
+        content_type = response.headers.get('Content-Type', '')
+        if 'text/html' in content_type and file_type == 'json':
+            raise Exception(
+                "Received HTML instead of JSON. "
+                "The file may not be shared properly. "
+                "Go to Google Drive → Right-click file → Share → 'Anyone with the link' → Save. "
+                f"Content preview: {response.text[:200]}"
+            )
 
         if file_type == 'csv':
             return pd.read_csv(StringIO(response.text))
         elif file_type == 'json':
-            return json.loads(response.text)
+            try:
+                return json.loads(response.text)
+            except json.JSONDecodeError as e:
+                raise Exception(
+                    f"Invalid JSON format. First 200 chars: {response.text[:200]}... "
+                    f"Error: {str(e)}"
+                )
 
     except Exception as e:
         raise Exception(f"Error loading from URL: {str(e)}")
@@ -385,16 +397,14 @@ def main():
 
         if data_source == "Google Drive/Sheets (Configured)":
             # Check if URLs are configured
-            if "REPLACE_WITH" in CLUSTER_LABELS_URL or "YOUR_SHEET_ID_HERE" in CLUSTER_ASSIGNMENTS_URL:
+            if "YOUR_FILE_ID_HERE" in CLUSTER_LABELS_URL or "YOUR_SHEET_ID_HERE" in CLUSTER_ASSIGNMENTS_URL:
                 st.error("❌ URLs not configured yet!")
                 st.info("""
                 **To configure:**
                 1. Upload files to Google Drive/Sheets
                 2. Share them with your org
-                3. Edit `app_final.py` (or app.py)
-                4. Replace CLUSTER_LABELS_URL with your JSON file link
-
-                See GET_JSON_FILE_LINK.md for instructions!
+                3. Edit `app_simple_sheets.py`
+                4. Replace the placeholder URLs at the top
                 """)
                 return
 
@@ -409,7 +419,7 @@ def main():
                     assignments = load_from_url(assignments_direct, 'csv')
 
                     # Load optional files
-                    if RAW_DATA_URL and "YOUR_SHEET_ID_HERE" not in str(RAW_DATA_URL):
+                    if RAW_DATA_URL and "YOUR_SHEET_ID_HERE" not in RAW_DATA_URL:
                         try:
                             raw_direct = convert_google_sheet_url(RAW_DATA_URL) if 'spreadsheets' in RAW_DATA_URL else convert_google_drive_url(RAW_DATA_URL)
                             raw_df = load_from_url(raw_direct, 'csv')
@@ -419,7 +429,7 @@ def main():
                         except Exception as e:
                             st.sidebar.warning(f"Could not load raw data: {e}")
 
-                    if CLASSIFIED_DATA_URL and "YOUR_SHEET_ID_HERE" not in str(CLASSIFIED_DATA_URL):
+                    if CLASSIFIED_DATA_URL and "YOUR_SHEET_ID_HERE" not in CLASSIFIED_DATA_URL:
                         try:
                             class_direct = convert_google_sheet_url(CLASSIFIED_DATA_URL) if 'spreadsheets' in CLASSIFIED_DATA_URL else convert_google_drive_url(CLASSIFIED_DATA_URL)
                             class_df = load_from_url(class_direct, 'csv')
@@ -438,12 +448,27 @@ def main():
             except Exception as e:
                 st.error(f"Error loading from URLs: {e}")
                 st.info("""
-                **Troubleshooting:**
-                - Make sure files are shared (publicly or with your org)
-                - Check that URLs are correct
-                - Ensure you're logged into your org Google account
-                - For JSON file: Use individual file link, not folder link!
+                **Troubleshooting Steps:**
+
+                1. **Share the JSON file properly:**
+                   - Go to Google Drive
+                   - Right-click `cluster_labels.json`
+                   - Click "Share"
+                   - Change to "Anyone with the link" (CAN VIEW)
+                   - Click "Copy link"
+                   - Update the URL in the code
+
+                2. **Alternative: Use Local Files instead:**
+                   - Switch to "Local Files" option above
+                   - Put your files in `output/` and `data/` directories
+
+                3. **Check file permissions:**
+                   - The file must be viewable by anyone with the link
+                   - Org-only sharing may require login
                 """)
+
+                # Show direct download URL for debugging
+                st.code(f"Direct URL attempted: {convert_google_drive_url(CLUSTER_LABELS_URL)}")
                 return
 
         elif data_source == "Local Files":
