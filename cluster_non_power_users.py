@@ -39,11 +39,11 @@ csv.field_size_limit(sys.maxsize)
 
 # Required files
 CLUSTER_LABELS_URL = "https://drive.google.com/drive/u/0/folders/1WlcijByZ26ca1pGsZeBM6T3aw7Q3olfl"
-CLUSTER_ASSIGNMENTS_URL = "https://drive.google.com/drive/u/0/folders/1WlcijByZ26ca1pGsZeBM6T3aw7Q3olfl"
+CLUSTER_ASSIGNMENTS_URL = "https://docs.google.com/spreadsheets/d/1zrLC8DAJ2cVsBCTcTDmpiMPJ4dbKRyf9bq4iBC927xk/edit?gid=1891549065#gid=1891549065"
 
 # Optional files (set to None if not using)
 RAW_DATA_URL = ""
-CLASSIFIED_DATA_URL = "https://drive.google.com/drive/u/0/folders/1s6X8WBgA3xln1K0INOgxt8W0pIyvpo-A"
+CLASSIFIED_DATA_URL = "https://docs.google.com/spreadsheets/d/1rKADosJYtZS7ZW0jcb_UqCPStaaGSu1uK9mrB5uVE34/edit?gid=2020214483#gid=2020214483"
 
 # ============================================================================
 
