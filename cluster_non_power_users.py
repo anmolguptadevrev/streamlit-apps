@@ -99,8 +99,9 @@ def convert_google_sheet_url(url):
         # Get gid if present (for specific sheet/tab)
         gid = '0'  # Default first sheet
         if 'gid=' in url:
-            gid = url.split('gid=')[1].split('&')[0]
-        return f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+            gid = url.split('gid=')[1].split('&')[0].split('#')[0]
+        # Use gviz/tq endpoint which is more reliable for public sheets
+        return f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&gid={gid}"
 
     return url
 
@@ -415,8 +416,15 @@ def main():
                     assignments_direct = convert_google_sheet_url(CLUSTER_ASSIGNMENTS_URL) if 'spreadsheets' in CLUSTER_ASSIGNMENTS_URL else convert_google_drive_url(CLUSTER_ASSIGNMENTS_URL)
 
                     # Load required files
-                    labels = load_from_url(labels_direct, 'json')
-                    assignments = load_from_url(assignments_direct, 'csv')
+                    try:
+                        labels = load_from_url(labels_direct, 'json')
+                    except Exception as e:
+                        raise Exception(f"Failed to load CLUSTER_LABELS: {str(e)}")
+
+                    try:
+                        assignments = load_from_url(assignments_direct, 'csv')
+                    except Exception as e:
+                        raise Exception(f"Failed to load CLUSTER_ASSIGNMENTS: {str(e)}")
 
                     # Load optional files
                     if RAW_DATA_URL and "YOUR_SHEET_ID_HERE" not in RAW_DATA_URL:
@@ -450,25 +458,36 @@ def main():
                 st.info("""
                 **Troubleshooting Steps:**
 
-                1. **Share the JSON file properly:**
-                   - Go to Google Drive
-                   - Right-click `cluster_labels.json`
-                   - Click "Share"
-                   - Change to "Anyone with the link" (CAN VIEW)
-                   - Click "Copy link"
-                   - Update the URL in the code
+                1. **Share ALL files properly (REQUIRED):**
+                   - Open each file in Google Drive/Sheets
+                   - Click "Share" button (top right)
+                   - Under "General access" → "Anyone with the link"
+                   - Set to "Viewer"
+                   - Click "Done"
 
-                2. **Alternative: Use Local Files instead:**
-                   - Switch to "Local Files" option above
+                   **Files to share:**
+                   - cluster_labels.json (Google Drive file)
+                   - cluster_assignments (Google Sheet)
+                   - classified_facets (Google Sheet, if using)
+
+                2. **Test the share link:**
+                   - Copy the share link
+                   - Open it in an incognito/private browser window
+                   - If it asks you to log in → NOT shared correctly
+
+                3. **Alternative: Use Local Files instead:**
+                   - Switch to "Local Files" option in sidebar
                    - Put your files in `output/` and `data/` directories
-
-                3. **Check file permissions:**
-                   - The file must be viewable by anyone with the link
-                   - Org-only sharing may require login
                 """)
 
-                # Show direct download URL for debugging
-                st.code(f"Direct URL attempted: {convert_google_drive_url(CLUSTER_LABELS_URL)}")
+                # Show converted URLs for debugging
+                with st.expander("🔍 Debug Info - Click to see converted URLs"):
+                    st.markdown("**Cluster Labels (JSON):**")
+                    st.code(convert_google_drive_url(CLUSTER_LABELS_URL))
+                    st.markdown("**Cluster Assignments (CSV):**")
+                    assignments_url = convert_google_sheet_url(CLUSTER_ASSIGNMENTS_URL) if 'spreadsheets' in CLUSTER_ASSIGNMENTS_URL else convert_google_drive_url(CLUSTER_ASSIGNMENTS_URL)
+                    st.code(assignments_url)
+                    st.markdown("*Try opening these URLs in an incognito window to test if they're publicly accessible*")
                 return
 
         elif data_source == "Local Files":
